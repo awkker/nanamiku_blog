@@ -1,4 +1,5 @@
 ---
+import { bgmConfig } from '@constants/site-config';
 import HeroParallax from './components/HeroParallax.tsx';
 /**
  * 开屏页（挂载于根路径 /）。
@@ -41,6 +42,41 @@ const { brand, home } = copy;
     <meta property="og:type" content="website" />
     <meta property="og:title" content={home.metaTitle} />
     <meta property="og:description" content={home.metaDescription} />
+    <!--
+      转场：浏览器原生 View Transition（同源跨文档导航）。
+      开屏 → 博客（或任意站内页）走整页导航，由浏览器做「旧页缩小淡出、
+      新页放大淡入」动画 —— 不依赖 Astro SPA，因此新页面 head 脚本完整加载，
+      博客功能无损。
+    -->
+    <style is:inline>
+      @view-transition {
+        navigation: auto;
+      }
+      @keyframes splash-vt-out {
+        to {
+          opacity: 0;
+          transform: scale(0.97);
+        }
+      }
+      @keyframes splash-vt-in {
+        from {
+          opacity: 0;
+          transform: scale(1.02) translateY(8px);
+        }
+      }
+      ::view-transition-old(root) {
+        animation: 220ms cubic-bezier(0.4, 0, 0.2, 1) both splash-vt-out;
+      }
+      ::view-transition-new(root) {
+        animation: 280ms cubic-bezier(0.4, 0, 0.2, 1) both splash-vt-in;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+          animation: none;
+        }
+      }
+    </style>
     <!-- 字体与主题对齐：异步加载寒蝉全圆体（同 layouts/HeadMeta.astro 的方式） -->
     <link rel="stylesheet" href="/fonts/ChillRoundFRegular/result.css" media="print" onload="this.setAttribute('media','all')" />
     <link rel="stylesheet" href="/fonts/ChillRoundFBold/result.css" media="print" onload="this.setAttribute('media','all')" />
@@ -53,10 +89,18 @@ const { brand, home } = copy;
           return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.classList.toggle('dark', getTheme() === 'dark');
+
+        // 跟随系统自动切换（晚上系统转深色 → 站点跟着转），
+        // 仅当用户没有手动选择过主题时生效。
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+          if (!('theme' in localStorage)) {
+            document.documentElement.classList.toggle('dark', getTheme() === 'dark');
+          }
+        });
       })();
     </script>
   </head>
-  <body class="overflow-hidden bg-slate-900 text-[#39c5bb]">
+  <body class="overflow-hidden bg-slate-900 text-[#39c5bb] dark:text-[#c084fc]">
     <main class="relative h-screen w-screen overflow-hidden">
       <!-- 背景视差层放在最底部，用来提供开屏的氛围感。 -->
       <HeroParallax client:load />
@@ -76,11 +120,11 @@ const { brand, home } = copy;
         2. 右侧挂载音乐播放器与时钟小组件
       -->
       <header
-        class="absolute left-0 top-0 z-20 flex h-8 w-full items-center justify-between border-b border-white/30 bg-white/35 px-2.5 text-sm font-medium text-[#39c5bb]/90 backdrop-blur-none min-[380px]:px-3 sm:px-4"
+        class="absolute left-0 top-0 z-20 flex h-8 w-full items-center justify-between border-b border-white/30 bg-white/35 px-2.5 text-sm font-medium text-[#39c5bb]/90 backdrop-blur-none min-[380px]:px-3 sm:px-4 dark:border-white/15 dark:bg-slate-900/45 dark:text-[#c084fc]/90"
       >
         <a
           href="/"
-          class="inline-flex items-center gap-2 rounded-[18px] border border-white/45 bg-white/72 px-2.5 py-1 text-[13px] font-semibold tracking-[0.01em] text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.1)] transition hover:border-miku/35 hover:text-miku"
+          class="inline-flex items-center gap-2 rounded-[18px] border border-white/45 bg-white/72 px-2.5 py-1 text-[13px] font-semibold tracking-[0.01em] text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.1)] transition hover:border-miku/35 hover:text-miku dark:border-white/20 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:border-[#c084fc]/45 dark:hover:text-[#c084fc]"
         >
           <img
             src="/picture/logo-64.webp"
@@ -96,7 +140,7 @@ const { brand, home } = copy;
         </a>
 
         <!-- 右上角的小组件交给独立 React 岛屿处理。 -->
-        <HomeTopbarWidgets client:load />
+        <HomeTopbarWidgets client:load audioGroups={bgmConfig.audio} metingApi={bgmConfig.metingApi} />
       </header>
 
       <!--
@@ -138,13 +182,15 @@ const { brand, home } = copy;
     opacity: 0.45;
     animation: particle-float ease-in-out infinite alternate;
   }
+  .dark .splash-particles span {
+    background: radial-gradient(circle, rgba(216, 180, 254, 0.7), rgba(216, 180, 254, 0));
+  }
   @keyframes particle-float {
     from { transform: translateY(0) translateX(0); opacity: 0.25; }
     to { transform: translateY(-42px) translateX(12px); opacity: 0.7; }
   }
 
-  /* 播放器「正在播放」均衡器。 */
-  .splash-eq {
+  /* 播放器「正在播放」均衡器。 */  .splash-eq {
     display: inline-flex;
     align-items: flex-end;
     gap: 1.5px;
@@ -159,11 +205,42 @@ const { brand, home } = copy;
     transform-origin: bottom;
     animation: eq-bounce 1s ease-in-out infinite;
   }
+  .dark .splash-eq span {
+    background: #c084fc;
+  }
   .splash-eq span:nth-child(2) { animation-delay: 0.25s; }
   .splash-eq span:nth-child(3) { animation-delay: 0.5s; }
   @keyframes eq-bounce {
     0%, 100% { transform: scaleY(0.3); }
     50% { transform: scaleY(1); }
+  }
+
+  /* 主题切换按钮：白色玻璃小圆钮 + 初音绿图标（开屏顶栏风格） */
+  .splash-theme-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(240, 255, 252, 0.55);
+    background: rgba(248, 254, 252, 0.25);
+    color: rgba(57, 197, 187, 0.95);
+    transition: all 0.2s ease;
+  }
+  .splash-theme-btn:hover {
+    background: rgba(248, 254, 252, 0.4);
+    border-color: rgba(240, 255, 252, 0.85);
+    color: #ffffff;
+  }
+  .dark .splash-theme-btn {
+    border-color: rgba(192, 132, 252, 0.4);
+    color: rgba(192, 132, 252, 0.95);
+  }
+  .dark .splash-theme-btn:hover {
+    background: rgba(192, 132, 252, 0.18);
+    border-color: rgba(192, 132, 252, 0.6);
+    color: #e9d5ff;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -201,6 +278,20 @@ const { brand, home } = copy;
     display: inline-block;
   }
 
+  /* 夜间：薰衣草渐变。
+     注意必须用 background-image（background 简写会重置 clip: text 与 size，
+     导致渐变显示成紫白长方形且动画失效）。 */
+  .dark .hero-text {
+    background-image: linear-gradient(
+      90deg,
+      #d8b4fe,
+      #c084fc 25%,
+      #ffffff 50%,
+      #c084fc 75%,
+      #d8b4fe
+    );
+  }
+
   /* 渐变流动动画：推动背景渐变左右移动。 */
   @keyframes gradient-flow {
     0% { background-position: 0% 50%; }
@@ -222,6 +313,11 @@ const { brand, home } = copy;
     will-change: opacity;
   }
 
+  /* 夜间：背景轻微压暗以衬托深色玻璃（白天保持原图，不再打光） */
+  html.dark .parallax-img {
+    filter: brightness(0.82);
+  }
+
   .parallax-img.is-active {
     opacity: 1;
   }
@@ -240,6 +336,15 @@ const { brand, home } = copy;
     animation: fade-up 620ms ease-out 0.18s both;
   }
 
+  /* 夜间：深色玻璃副标题框 */
+  .dark .subtitle-shell {
+    border-color: rgba(192, 132, 252, 0.4);
+    background: rgba(24, 20, 38, 0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 10px 28px rgba(0, 0, 0, 0.4);
+  }
+
   .subtitle-text {
     margin: 0;
     padding: clamp(0.72rem, 1.25vw, 0.92rem) clamp(1rem, 2.2vw, 1.6rem);
@@ -252,103 +357,16 @@ const { brand, home } = copy;
     letter-spacing: 0.02em;
   }
 
+  .dark .subtitle-text {
+    color: rgba(192, 132, 252, 0.95);
+  }
+
   .subtitle-cursor {
     opacity: 0.65;
   }
 
-  /* ===== 音乐播放器（MusicPlayer） ===== */
-
-  .player-range {
-    -webkit-appearance: none;
-    appearance: none;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 9999px;
-  }
-  .player-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #39c5bb;
-    cursor: pointer;
-  }
-  .player-range-lg {
-    -webkit-appearance: none;
-    appearance: none;
-    background: rgba(15, 23, 42, 0.12);
-    border-radius: 9999px;
-    height: 4px;
-  }
-  .dark .player-range-lg {
-    background: rgba(255, 255, 255, 0.1);
-  }
-  .player-range-lg::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #39c5bb;
-    cursor: pointer;
-    box-shadow: 0 0 8px rgba(57, 197, 187, 0.4);
-  }
-
-  /* 展开面板的遮罩与卡片（替代 Vue Transition 的 fade / card-slide）。 */
-  .player-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
-    background: rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .player-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .player-panel {
-    position: fixed;
-    right: 0.5rem;
-    top: 2.5rem;
-    z-index: 50;
-    width: calc(100vw - 1rem);
-    max-width: 24rem;
-    border-radius: 1rem;
-    /* 白天：亮色玻璃 */
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.72);
-    padding: 1rem;
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    opacity: 0;
-    transform: translateY(-8px) scale(0.96);
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  /* 夜间：深色玻璃（与博客 .dark 主题同步） */
-  .dark .player-panel {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(15, 23, 42, 0.88);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  }
-  .player-panel.open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-  }
-  @media (min-width: 380px) {
-    .player-panel {
-      right: 0.75rem;
-      padding: 1.25rem;
-    }
-  }
-  @media (min-width: 640px) {
-    .player-panel {
-      right: 1rem;
-      width: 20rem;
-    }
-  }
+  /* 音乐播放器样式已抽到共享文件 src/styles/components/splash-player.css，
+     via splash.css @import，开屏与博客顶栏共用同一份。 */
 
   /* ===== 底部 Dock（HomeBottomDock） ===== */
 
@@ -375,13 +393,45 @@ const { brand, home } = copy;
     display: none;
   }
 
+  /* 夜间：深色玻璃 Dock 底板（薰衣草紫氛围） */
+  .dark .dock-shell {
+    border-color: rgba(150, 110, 220, 0.42);
+    background: linear-gradient(
+      145deg,
+      rgba(45, 35, 70, 0.62) 0%,
+      rgba(30, 22, 50, 0.48) 38%,
+      rgba(192, 132, 252, 0.2) 100%
+    );
+    box-shadow:
+      0 14px 34px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -10px 22px rgba(192, 132, 252, 0.12);
+  }
+
   .dock-icon {
+    /* 静态玻璃观感放 CSS；transform/阴影由 rAF 每帧直接驱动，
+       不再使用 transition，避免与惯性插值叠加造成拖尾。 */
+    background: linear-gradient(180deg, #83efe5 0%, #39c5bb 100%);
+    border-color: rgba(238, 255, 252, 0.88);
+    color: rgba(255, 255, 255, 0.97);
     transform-origin: center bottom;
-    transition:
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
-      filter 180ms ease;
     will-change: transform;
+  }
+
+  /* 夜间：Dock 图标换薰衣草紫渐变 */
+  .dark .dock-icon {
+    background: linear-gradient(180deg, #d8b4fe 0%, #c084fc 100%);
+    border-color: rgba(233, 213, 255, 0.8);
+  }
+
+  /* Dock 弹出阴影与指示点颜色随主题两态 */
+  :root {
+    --dock-shadow: rgba(57, 197, 187, 0.34);
+    --dock-indicator: rgba(57, 197, 187, 0.96);
+  }
+  .dark {
+    --dock-shadow: rgba(192, 132, 252, 0.42);
+    --dock-indicator: rgba(192, 132, 252, 0.96);
   }
 
   .dock-icon svg {
@@ -389,9 +439,9 @@ const { brand, home } = copy;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dock-icon,
-    .dock-icon svg {
-      transition-duration: 0.01ms;
+    .dock-icon {
+      /* 减弱动效偏好下保持静态 */
+      transform: none !important;
     }
   }
 
@@ -420,5 +470,49 @@ const { brand, home } = copy;
   .liquid-glass-content {
     position: relative;
     z-index: 1;
+  }
+
+  /* ===== 主题切换动画（与博客 theme-transition.css 一致的渐变扫过） ===== */
+
+  @keyframes gradient-sweep {
+    from { mask-position: 100% 0; }
+    to { mask-position: 0 0; }
+  }
+
+  html.theme-transition::view-transition-group(root) {
+    height: 100dvh;
+    overflow: clip;
+  }
+
+  html.theme-transition::view-transition-image-pair(root) {
+    isolation: isolate;
+    height: 100dvh;
+  }
+
+  /* 旧主题保持不动 */
+  html.theme-transition::view-transition-old(root) {
+    animation: none;
+    z-index: 0;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+  }
+
+  /* 新主题通过渐变遮罩从左到右揭示 */
+  html.theme-transition::view-transition-new(root) {
+    mask-image: linear-gradient(to right, black 40%, transparent 60%);
+    mask-size: 300% 100%;
+    animation: gradient-sweep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    z-index: 1;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-transition::view-transition-new(root),
+    html.theme-transition::view-transition-old(root) {
+      animation: none;
+    }
   }
 </style>

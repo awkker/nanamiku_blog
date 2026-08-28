@@ -25,10 +25,15 @@
   text-shadow: none;
 }
 
-/* 导航下划线 / 高亮统一为初音绿（与开屏页一致）。 */
+/* 导航下划线 / 高亮：白天初音绿、夜间薰衣草紫（与主题色两态一致）。 */
 #site-header.liquid-header button::after,
 #site-header.liquid-header a::after {
   background: #39c5bb;
+}
+
+.dark #site-header.liquid-header button::after,
+.dark #site-header.liquid-header a::after {
+  background: #c084fc;
 }
 
 /* 滚动后（with-background，由 Navigator 原逻辑触发）玻璃更实。 */
@@ -46,4 +51,29 @@
 
 .dark #site-header.liquid-header.with-background {
   background: rgba(15, 23, 42, 0.82);
+}
+
+/* ============================================================================
+ * 搜索弹窗液态玻璃容器（SearchDialog.tsx）
+ * ========================================================================== */
+
+.liquid-search-frame {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+.dark .liquid-search-frame {
+  border-color: rgba(71, 85, 105, 0.5);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow:
+    0 24px 60px rgba(2, 6, 23, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
