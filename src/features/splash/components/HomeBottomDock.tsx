@@ -5,31 +5,27 @@ import { copy } from '../lib/copy';
 import { heroImages, heroIndex, shuffleHeroImage } from '../stores/heroImage';
 import LiquidGlassCard from './LiquidGlassCard';
 
-interface DockPalette {
-  from: string;
-  to: string;
-  shadow: string;
-  stroke: string;
-  glyph: string;
-}
-
-// 这里统一收口为初音绿系。想调图标颜色优先改 `from / to / shadow`。
-const MIKU_DOCK_PALETTE: DockPalette = {
-  from: '#83efe5',
-  to: '#39c5bb',
-  shadow: 'rgba(57, 197, 187, 0.34)',
-  stroke: 'rgba(238, 255, 252, 0.88)',
-  glyph: 'rgba(255, 255, 255, 0.97)',
-};
-
-// Dock 手感的核心旋钮（想更 macOS 可从这里调）：
+// Dock 手感旋钮（想更 macOS 可从这里调）：
 // - RANGE 决定「鼠标离多远还会影响相邻图标」
-// - SCALE_BOOST 决定中心图标最多能放大多少
-// - LIFT 决定图标向上抬起的高度
+// - SCALE_BOOST 决定中心图标最多放大多少（macOS 以放大为主，几乎不上浮）
+// - LIFT 决定图标向上抬起的高度（保持很小，避免「蹦起来」）
+// - LERP 是每帧逼近目标的惯性系数，越大跟手越快、越小越柔和
 const DOCK_EFFECT_RANGE = 168;
-const DOCK_MAX_SCALE_BOOST = 0.88;
-const DOCK_MAX_LIFT = 22;
+const DOCK_MAX_SCALE_BOOST = 0.8;
+const DOCK_MAX_LIFT = 8;
+const DOCK_MAX_TILT = 1.5;
 const DOCK_LABEL_RANGE = 86;
+const DOCK_LERP = 0.3;
+
+// 相邻图标间距随放大强度动态展开的幅度（macOS 里放大的图标会把邻居「挤开」）
+const DOCK_GAP_SPREAD = 10;
+
+// 底板随图标放大而纵向膨胀的幅度（横向由布局间距自然展开，不再额外缩放）
+const DOCK_FRAME_SCALE_X = 0;
+const DOCK_FRAME_SCALE_Y = 0.05;
+
+// 弹出阴影色：CSS 变量（白天初音绿 / 夜间薰衣草紫，定义在开屏样式）
+const MIKU_SHADOW = 'var(--dock-shadow, rgba(57, 197, 187, 0.34))';
 
 interface DockIconData {
   viewBox: string;
@@ -91,17 +87,24 @@ function DockGlyph({ name, className = '' }: { name: string; className?: string 
   );
 }
 
-interface DockMetrics {
-  intensity: number;
-  scale: number;
-  lift: number;
-  tilt: number;
+/** 每个 Dock 项中需要按帧驱动的元素引用。 */
+interface DockItemRefs {
+  li: HTMLElement;
+  icon: HTMLElement;
+  reflection: HTMLElement;
+  indicator: HTMLElement;
+  tooltip: HTMLElement | null;
+  href?: string;
 }
 
-const emptyMetrics: DockMetrics = { intensity: 0, scale: 1, lift: 0, tilt: 0 };
-
 /**
- * 底部 macOS 风格玻璃 Dock：指针放大/上抬动画、tooltip、换图按钮、液态玻璃滤镜。
+ * 底部 macOS 风格玻璃 Dock。
+ *
+ * 动效实现说明：
+ * - 不经过 React state 渲染，指针事件只更新「目标强度」，
+ *   由 rAF 循环做惯性插值（lerp）后直接写入 DOM —— 平滑且跟手；
+ * - macOS 手感：以放大为主、轻微上浮、无倾斜；图标放大时
+ *   玻璃底板会同步横向/纵向轻微膨胀。
  */
 export default function HomeBottomDock() {
   const $heroIndex = useStore(heroIndex);
@@ -110,15 +113,15 @@ export default function HomeBottomDock() {
   const shuffleCopy = copy.components.heroShuffleBtn;
 
   const dockRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
-  const [itemCenters, setItemCenters] = useState<number[]>([]);
-  const [pointerX, setPointerX] = useState<number | null>(null);
-  const [canTrackPointer, setCanTrackPointer] = useState(false);
-  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const itemRefs = useRef<DockItemRefs[]>([]);
+  const centersRef = useRef<number[]>([]);
+  const pointerXRef = useRef<number | null>(null);
+  const targetRef = useRef<number[]>([]);
+  const currentRef = useRef<number[]>([]);
+  const focusedIdRef = useRef<string | null>(null);
+  const currentPathRef = useRef('/');
   const [shuffleSpinning, setShuffleSpinning] = useState(false);
   const shuffleTimer = useRef<number | null>(null);
-
-  const currentPath = useRef('/');
 
   const shuffleTitle = () => {
     const total = Math.max($heroImages.length, 1);
@@ -144,123 +147,45 @@ export default function HomeBottomDock() {
     },
   ];
 
-  // 当前激活项：优先键盘聚焦，其次指针最近距离。
-  let activeIndex = -1;
-  if (focusedId) {
-    activeIndex = dockEntries.findIndex((entry) => entry.id === focusedId);
-  } else if (canTrackPointer && pointerX !== null && itemCenters.length > 0) {
-    let nearestIndex = -1;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-    itemCenters.forEach((center, index) => {
-      const distance = Math.abs(pointerX - center);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = index;
-      }
-    });
-    activeIndex = nearestDistance <= DOCK_LABEL_RANGE ? nearestIndex : -1;
-  }
-
-  const metricsFor = (index: number): DockMetrics => {
-    const center = itemCenters[index];
-    if (!canTrackPointer || pointerX === null || typeof center !== 'number') {
-      return emptyMetrics;
-    }
-
-    const offset = pointerX - center;
-    const distance = Math.abs(offset);
-    const normalized = Math.max(0, 1 - distance / DOCK_EFFECT_RANGE);
-
-    // 用 smoothstep 让曲线更顺，图标靠近/离开时不会显得「硬」。
-    const intensity = normalized * normalized * (3 - 2 * normalized);
-
-    return {
-      intensity,
-      scale: 1 + intensity * DOCK_MAX_SCALE_BOOST,
-      lift: intensity * DOCK_MAX_LIFT,
-      tilt: (-offset / DOCK_EFFECT_RANGE) * 6 * intensity,
-    };
-  };
-
-  const iconStyleFor = (index: number): React.CSSProperties => {
-    const metrics = metricsFor(index);
-    const shadowSpread = 22 + metrics.intensity * 18;
-    const shadowLift = 12 + metrics.intensity * 18;
-
-    // 真正决定「macOS 味道」的是这里：
-    // - transform 负责放大、上抬、轻微倾斜
-    // - boxShadow 负责把中心图标做得更像从底座里弹出来
-    return {
-      transform: `translate3d(0, ${(-metrics.lift).toFixed(1)}px, 0) scale(${metrics.scale.toFixed(3)}) rotate(${metrics.tilt.toFixed(2)}deg)`,
-      background: `linear-gradient(180deg, ${MIKU_DOCK_PALETTE.from} 0%, ${MIKU_DOCK_PALETTE.to} 100%)`,
-      borderColor: MIKU_DOCK_PALETTE.stroke,
-      color: MIKU_DOCK_PALETTE.glyph,
-      boxShadow: `0 ${shadowLift.toFixed(1)}px ${shadowSpread.toFixed(1)}px ${MIKU_DOCK_PALETTE.shadow}, inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -10px 18px rgba(15,23,42,0.16)`,
-    };
-  };
-
-  const reflectionStyleFor = (index: number): React.CSSProperties => {
-    const metrics = metricsFor(index);
-    return {
-      opacity: (0.18 + metrics.intensity * 0.28).toFixed(3),
-      transform: `translateX(-50%) scale(${(0.85 + metrics.intensity * 0.36).toFixed(3)})`,
-    };
-  };
-
-  const indicatorStyleFor = (index: number, href?: string): React.CSSProperties => {
-    const metrics = metricsFor(index);
-    const isCurrent = Boolean(href && href === currentPath.current);
-    const isActive = activeIndex === index || isCurrent;
-    return {
-      opacity: (isActive ? 0.96 : metrics.intensity * 0.35).toFixed(3),
-      transform: `scale(${(isActive ? 1 : 0.76 + metrics.intensity * 0.38).toFixed(3)})`,
-      background: isCurrent ? 'rgba(57, 197, 187, 0.96)' : 'rgba(255, 255, 255, 0.92)',
-      boxShadow: isActive ? '0 0 12px rgba(57, 197, 187, 0.42)' : '0 0 10px rgba(255, 255, 255, 0.22)',
-    };
-  };
-
-  const itemStyleFor = (index: number): React.CSSProperties => {
-    const metrics = metricsFor(index);
-    return {
-      zIndex: String((activeIndex === index ? 80 : 30) + Math.round(metrics.intensity * 30)),
-    };
-  };
-
-  const tooltipStyleFor = (index: number): React.CSSProperties => {
-    const metrics = metricsFor(index);
-    return {
-      marginBottom: `${(16 + metrics.lift).toFixed(1)}px`,
-    };
-  };
-
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dockEntries 为静态配置，effect 只初始化一次
   useEffect(() => {
-    currentPath.current = window.location.pathname;
-
     const dock = dockRef.current;
     if (!dock) return;
 
-    const measureItemCenters = () => {
+    currentPathRef.current = window.location.pathname;
+
+    // ---- 收集每项的可驱动元素 ----
+    const lis = Array.from(dock.querySelectorAll<HTMLElement>('li[data-dock-item]'));
+    itemRefs.current = lis.map((li) => ({
+      li,
+      icon: li.querySelector<HTMLElement>('.dock-icon') as HTMLElement,
+      reflection: li.querySelector<HTMLElement>('[data-dock-reflection]') as HTMLElement,
+      indicator: li.querySelector<HTMLElement>('[data-dock-indicator]') as HTMLElement,
+      tooltip: li.querySelector<HTMLElement>('[data-dock-tooltip]'),
+      href: li.getAttribute('data-dock-href') ?? undefined,
+    }));
+    targetRef.current = lis.map(() => 0);
+    currentRef.current = lis.map(() => 0);
+
+    const frame = dock.querySelector<HTMLElement>('.liquid-glass-frame');
+
+    const canTrackPointer = () => window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+
+    const measureCenters = () => {
       const dockRect = dock.getBoundingClientRect();
-      setItemCenters(
-        itemRefs.current.map((el) => {
-          if (!el) return 0;
-          const rect = el.getBoundingClientRect();
-          return rect.left - dockRect.left + rect.width / 2;
-        }),
-      );
+      centersRef.current = itemRefs.current.map((item) => {
+        const rect = item.li.getBoundingClientRect();
+        return rect.left - dockRect.left + rect.width / 2;
+      });
     };
 
-    const updatePointerCapability = () => {
-      setCanTrackPointer(window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false);
-    };
-
+    // ---- 指针事件只更新「目标强度」 ----
     const onPointerMove = (event: PointerEvent) => {
-      if (!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) return;
+      if (!canTrackPointer()) return;
       const dockRect = dock.getBoundingClientRect();
-      setPointerX(event.clientX - dockRect.left);
+      pointerXRef.current = event.clientX - dockRect.left;
 
       // 把鼠标位置同步给液态玻璃滤镜，让玻璃折射跟随指针。
-      const frame = dock.querySelector<HTMLElement>('.liquid-glass-frame');
       if (frame) {
         frame.dispatchEvent(
           new MouseEvent('mousemove', {
@@ -272,30 +197,148 @@ export default function HomeBottomDock() {
     };
 
     const onPointerLeave = () => {
-      setPointerX(null);
+      pointerXRef.current = null;
     };
 
-    updatePointerCapability();
-    measureItemCenters();
+    // ---- rAF 循环：惯性插值 + 直接写 DOM ----
+    let rafId = 0;
+    const smoothStep = (t: number) => {
+      const n = Math.max(0, Math.min(1, t));
+      return n * n * (3 - 2 * n);
+    };
 
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+    const loop = () => {
+      rafId = requestAnimationFrame(loop);
+
+      const px = pointerXRef.current;
+      const centers = centersRef.current;
+      const items = itemRefs.current;
+      const canTrack = canTrackPointer();
+
+      // 计算每个图标的目标强度（平滑阶跃曲线）。
+      for (let i = 0; i < items.length; i++) {
+        let target = 0;
+        if (canTrack && px !== null && centers.length > 0) {
+          const distance = Math.abs(px - centers[i]);
+          target = Math.max(0, 1 - distance / DOCK_EFFECT_RANGE);
+        }
+        targetRef.current[i] = target;
+        // 惯性插值：当前值每帧向目标逼近，产生柔和的跟随感。
+        currentRef.current[i] = lerp(currentRef.current[i], target, DOCK_LERP);
+      }
+
+      // 平滑后的强度数组（间距/视觉统一使用，避免重复计算）。
+      const intensityArr = currentRef.current.map((v) => smoothStep(v));
+
+      // 计算 tooltip 激活项（键盘聚焦优先，其次指针最近）。
+      let activeIndex = -1;
+      const focusedId = focusedIdRef.current;
+      if (focusedId) {
+        activeIndex = dockEntries.findIndex((entry) => entry.id === focusedId);
+      } else if (canTrack && px !== null && centers.length > 0) {
+        let nearest = -1;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < centers.length; i++) {
+          const distance = Math.abs(px - centers[i]);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearest = i;
+          }
+        }
+        activeIndex = nearestDistance <= DOCK_LABEL_RANGE ? nearest : -1;
+      }
+
+      // 应用每项的视觉状态。
+      let maxIntensity = 0;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const intensity = intensityArr[i];
+        maxIntensity = Math.max(maxIntensity, intensity);
+
+        const scale = 1 + intensity * DOCK_MAX_SCALE_BOOST;
+        const lift = intensity * DOCK_MAX_LIFT;
+        const tilt = intensity * DOCK_MAX_TILT;
+        const isActive = activeIndex === i;
+        const isCurrent = Boolean(item.href && item.href === currentPathRef.current);
+
+        // 图标：放大 + 轻微上浮（macOS 以放大为主）。
+        item.icon.style.transform = `translate3d(0, ${(-lift).toFixed(1)}px, 0) scale(${scale.toFixed(3)}) rotate(${tilt.toFixed(2)}deg)`;
+
+        // 相邻间距动态展开：放大中的图标会把邻居「挤开」，
+        // 间距增量取左右相邻两个图标强度的较大值；
+        // 首尾项只向内展开，保证 Dock 整体不漂移。
+        const leftNeighbor = i > 0 ? intensityArr[i - 1] : 0;
+        const rightNeighbor = i < items.length - 1 ? intensityArr[i + 1] : 0;
+        if (i === 0) {
+          item.li.style.marginLeft = '0px';
+        } else {
+          item.li.style.marginLeft = `${(Math.max(intensity, leftNeighbor) * DOCK_GAP_SPREAD).toFixed(1)}px`;
+        }
+        if (i === items.length - 1) {
+          item.li.style.marginRight = '0px';
+        } else {
+          item.li.style.marginRight = `${(Math.max(intensity, rightNeighbor) * DOCK_GAP_SPREAD).toFixed(1)}px`;
+        }
+
+        // 弹出阴影随强度增强。
+        const shadowSpread = 22 + intensity * 18;
+        const shadowLift = 12 + intensity * 14;
+        item.icon.style.boxShadow = `0 ${shadowLift.toFixed(1)}px ${shadowSpread.toFixed(1)}px ${MIKU_SHADOW}, inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -10px 18px rgba(15,23,42,0.16)`;
+
+        // 底部倒影。
+        item.reflection.style.opacity = (0.18 + intensity * 0.28).toFixed(3);
+        item.reflection.style.transform = `translateX(-50%) scale(${(0.85 + intensity * 0.36).toFixed(3)})`;
+
+        // 指示点。
+        const indicatorOpacity = isActive ? 0.96 : intensity * 0.35;
+        const indicatorScale = isActive ? 1 : 0.76 + intensity * 0.38;
+        item.indicator.style.opacity = indicatorOpacity.toFixed(3);
+        item.indicator.style.transform = `scale(${indicatorScale.toFixed(3)})`;
+        item.indicator.style.background = isCurrent
+          ? 'var(--dock-indicator, rgba(57, 197, 187, 0.96))'
+          : 'rgba(255, 255, 255, 0.92)';
+        item.indicator.style.boxShadow = isActive ? '0 0 12px rgba(57, 197, 187, 0.42)' : '0 0 10px rgba(255, 255, 255, 0.22)';
+
+        // 层级与 tooltip。
+        item.li.style.zIndex = String((isActive ? 80 : 30) + Math.round(intensity * 30));
+        if (item.tooltip) {
+          item.tooltip.style.opacity = isActive ? '1' : '0';
+          item.tooltip.style.marginBottom = `${(16 + lift).toFixed(1)}px`;
+        }
+      }
+
+      // 玻璃底板随最大强度膨胀（macOS 的底板跟着图标一起变宽变高）。
+      if (frame) {
+        const sx = 1 + maxIntensity * DOCK_FRAME_SCALE_X;
+        const sy = 1 + maxIntensity * DOCK_FRAME_SCALE_Y;
+        frame.style.transform = `translateZ(0) scaleX(${sx.toFixed(4)}) scaleY(${sy.toFixed(4)})`;
+      }
+    };
+
+    measureCenters();
     dock.addEventListener('pointermove', onPointerMove, { passive: true });
     dock.addEventListener('pointerleave', onPointerLeave);
-    window.addEventListener('resize', updatePointerCapability, { passive: true });
-    window.addEventListener('resize', measureItemCenters, { passive: true });
+    window.addEventListener('resize', measureCenters, { passive: true });
 
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => measureItemCenters());
+      resizeObserver = new ResizeObserver(() => measureCenters());
       resizeObserver.observe(dock);
     }
 
+    rafId = requestAnimationFrame(loop);
+
     return () => {
+      cancelAnimationFrame(rafId);
       dock.removeEventListener('pointermove', onPointerMove);
       dock.removeEventListener('pointerleave', onPointerLeave);
-      window.removeEventListener('resize', updatePointerCapability);
-      window.removeEventListener('resize', measureItemCenters);
+      window.removeEventListener('resize', measureCenters);
       resizeObserver?.disconnect();
     };
+    // dockEntries 为静态配置，effect 只初始化一次。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleShuffleClick = () => {
@@ -324,24 +367,15 @@ export default function HomeBottomDock() {
 
           <div className="relative z-[1] col-start-1 row-start-1 flex w-fit max-w-full overflow-visible px-[8px] pt-[8px] pb-[7px]">
             <ul className="relative flex items-end justify-center gap-0.5 pt-0.5 sm:gap-1.5 sm:pt-1">
-              {dockEntries.map((entry, index) => (
-                <li
-                  key={entry.id}
-                  ref={(el) => {
-                    itemRefs.current[index] = el;
-                  }}
-                  className="relative flex shrink-0 justify-center"
-                  style={itemStyleFor(index)}
-                >
-                  {activeIndex === index && (
-                    <div
-                      className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-3 w-max max-w-none -translate-x-1/2 whitespace-nowrap rounded-2xl border border-white/80 bg-white/90 px-3 py-1.5 font-medium text-[11px] text-slate-600 tracking-[0.01em] shadow-[0_14px_32px_rgba(15,23,42,0.14)] backdrop-blur-md sm:mb-3.5"
-                      style={tooltipStyleFor(index)}
-                    >
-                      <span>{entry.label}</span>
-                      <span className="absolute top-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-white/75 border-r border-b bg-white/88" />
-                    </div>
-                  )}
+              {dockEntries.map((entry) => (
+                <li key={entry.id} data-dock-item data-dock-href={entry.href} className="relative flex shrink-0 justify-center">
+                  <div
+                    data-dock-tooltip
+                    className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-3 w-max max-w-none -translate-x-1/2 whitespace-nowrap rounded-2xl border border-white/80 bg-white/90 px-3 py-1.5 font-medium text-[11px] text-slate-600 tracking-[0.01em] opacity-0 shadow-[0_14px_32px_rgba(15,23,42,0.14)] backdrop-blur-md transition-opacity duration-150 sm:mb-3.5"
+                  >
+                    <span>{entry.label}</span>
+                    <span className="absolute top-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-white/75 border-r border-b bg-white/88" />
+                  </div>
 
                   {entry.kind === 'link' && entry.href ? (
                     <a
@@ -349,15 +383,16 @@ export default function HomeBottomDock() {
                       className="group relative flex w-[2.3rem] touch-manipulation flex-col items-center justify-end gap-1 rounded-[1.15rem] px-0.5 pt-0.5 pb-0.5 outline-none transition-[filter] duration-200 focus-visible:ring-2 focus-visible:ring-miku/65 focus-visible:ring-offset-2 focus-visible:ring-offset-white/55 sm:w-[4.45rem] sm:gap-1.5"
                       title={entry.title || entry.label}
                       aria-label={entry.label}
-                      aria-current={entry.href === currentPath.current ? 'page' : undefined}
-                      onFocus={() => setFocusedId(entry.id)}
-                      onBlur={() => setFocusedId(null)}
+                      aria-current={entry.href === currentPathRef.current ? 'page' : undefined}
+                      onFocus={() => {
+                        focusedIdRef.current = entry.id;
+                      }}
+                      onBlur={() => {
+                        focusedIdRef.current = null;
+                      }}
                     >
                       <span className="sr-only">{entry.label}</span>
-                      <span
-                        className="dock-icon relative flex h-[2.1rem] w-[2.1rem] items-center justify-center rounded-[0.92rem] border sm:h-[3.1rem] sm:w-[3.1rem] sm:rounded-[1.08rem]"
-                        style={iconStyleFor(index)}
-                      >
+                      <span className="dock-icon relative flex h-[2.1rem] w-[2.1rem] items-center justify-center rounded-[0.92rem] border sm:h-[3.1rem] sm:w-[3.1rem] sm:rounded-[1.08rem]">
                         <span className="pointer-events-none absolute inset-[1px] rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0))]" />
                         <span className="pointer-events-none absolute top-[10%] left-1/2 h-[18%] w-[72%] -translate-x-1/2 rounded-full bg-white/50 blur-[4px] sm:blur-[6px]" />
                         <DockGlyph
@@ -366,13 +401,10 @@ export default function HomeBottomDock() {
                         />
                       </span>
                       <span
+                        data-dock-reflection
                         className="pointer-events-none absolute bottom-[0.5rem] left-1/2 h-[0.34rem] w-[1.1rem] -translate-x-1/2 rounded-full bg-slate-900/12 blur-[5px] sm:bottom-[0.8rem] sm:h-[0.42rem] sm:w-[1.65rem] sm:blur-[7px]"
-                        style={reflectionStyleFor(index)}
                       />
-                      <span
-                        className="relative z-[1] h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5"
-                        style={indicatorStyleFor(index, entry.href)}
-                      />
+                      <span data-dock-indicator className="relative z-[1] h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5" />
                     </a>
                   ) : (
                     <button
@@ -381,14 +413,15 @@ export default function HomeBottomDock() {
                       title={entry.title || entry.label}
                       aria-label={entry.label}
                       onClick={handleShuffleClick}
-                      onFocus={() => setFocusedId(entry.id)}
-                      onBlur={() => setFocusedId(null)}
+                      onFocus={() => {
+                        focusedIdRef.current = entry.id;
+                      }}
+                      onBlur={() => {
+                        focusedIdRef.current = null;
+                      }}
                     >
                       <span className="sr-only">{entry.label}</span>
-                      <span
-                        className="dock-icon relative flex h-[2.1rem] w-[2.1rem] items-center justify-center rounded-[0.92rem] border sm:h-[3.1rem] sm:w-[3.1rem] sm:rounded-[1.08rem]"
-                        style={iconStyleFor(index)}
-                      >
+                      <span className="dock-icon relative flex h-[2.1rem] w-[2.1rem] items-center justify-center rounded-[0.92rem] border sm:h-[3.1rem] sm:w-[3.1rem] sm:rounded-[1.08rem]">
                         <span className="pointer-events-none absolute inset-[1px] rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0))]" />
                         <span className="pointer-events-none absolute top-[10%] left-1/2 h-[18%] w-[72%] -translate-x-1/2 rounded-full bg-white/50 blur-[4px] sm:blur-[6px]" />
                         <DockGlyph
@@ -397,13 +430,10 @@ export default function HomeBottomDock() {
                         />
                       </span>
                       <span
+                        data-dock-reflection
                         className="pointer-events-none absolute bottom-[0.5rem] left-1/2 h-[0.34rem] w-[1.1rem] -translate-x-1/2 rounded-full bg-slate-900/12 blur-[5px] sm:bottom-[0.8rem] sm:h-[0.42rem] sm:w-[1.65rem] sm:blur-[7px]"
-                        style={reflectionStyleFor(index)}
                       />
-                      <span
-                        className="relative z-[1] h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5"
-                        style={indicatorStyleFor(index)}
-                      />
+                      <span data-dock-indicator className="relative z-[1] h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5" />
                     </button>
                   )}
                 </li>
