@@ -2,6 +2,7 @@
 
 @import "tailwindcss";
 @config "../../../../tailwind.config.mjs";
+@import "../../../styles/components/splash-player.css";
 
 * {
   box-sizing: border-box;

@@ -25,5 +25,5 @@ export default function SystemClock() {
     return () => window.clearInterval(timer);
   }, []);
 
-  return <span className="text-[#39c5bb]/90 text-[11px] tabular-nums tracking-wide">{clockText}</span>;
+  return <span className="text-[#39c5bb]/90 text-[11px] tabular-nums tracking-wide dark:text-[#c084fc]/90">{clockText}</span>;
 }

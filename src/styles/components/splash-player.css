@@ -1,0 +1,121 @@
+/* ============================================================================
+ * 迷你音乐播放器（开屏顶栏 + 博客顶栏共用）
+ * 组件：src/components/music/MusicPlayer.tsx
+ * ========================================================================== */
+
+/* 音量小滑块 */
+.player-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+.player-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #39c5bb;
+  cursor: pointer;
+}
+.dark .player-range::-webkit-slider-thumb {
+  background: #c084fc;
+}
+
+/* 展开面板进度条 */
+.player-range-lg {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 9999px;
+  height: 4px;
+}
+.player-range-lg::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #39c5bb;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(57, 197, 187, 0.4);
+}
+.dark .player-range-lg::-webkit-slider-thumb {
+  background: #c084fc;
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.45);
+}
+
+/* 轨道颜色按顶栏背景上下文切换 */
+.splash-player-over-dark .player-range {
+  background: rgba(255, 255, 255, 0.15);
+}
+.splash-player-adaptive .player-range {
+  background: rgba(15, 23, 42, 0.15);
+}
+.dark .splash-player-adaptive .player-range {
+  background: rgba(255, 255, 255, 0.2);
+}
+.dark .player-range-lg {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 展开面板的遮罩与卡片。 */
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.player-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.player-panel {
+  position: fixed;
+  right: 0.5rem;
+  top: 2.5rem;
+  z-index: 50;
+  width: calc(100vw - 1rem);
+  max-width: 24rem;
+  border-radius: 1rem;
+  /* 白天：亮色玻璃 */
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 1rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* 博客顶栏更高，面板下移避开顶栏避免重叠 */
+.splash-player-adaptive .player-panel {
+  top: 3.75rem;
+}
+/* 夜间：深色玻璃（与博客 .dark 主题同步） */
+.dark .player-panel {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.player-panel.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+@media (min-width: 380px) {
+  .player-panel {
+    right: 0.75rem;
+    padding: 1.25rem;
+  }
+}
+@media (min-width: 640px) {
+  .player-panel {
+    right: 1rem;
+    width: 20rem;
+  }
+}

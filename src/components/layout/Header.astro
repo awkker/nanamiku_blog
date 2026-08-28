@@ -2,9 +2,10 @@
 import ChristmasLights from '@components/christmas/ChristmasLights.astro';
 import { ChristmasOrnamentToggle } from '@components/christmas/ChristmasOrnamentToggle';
 import { MobilePostHeader } from '@components/layout/MobilePostHeader';
+import MusicPlayer from '@components/music/MusicPlayer';
 import { MenuIcon } from '@components/ui/MenuIcon';
 import { MAX_WIDTH } from '@constants/layout';
-import { christmasConfig, siteConfig } from 'constants/site-config';
+import { bgmConfig, christmasConfig, siteConfig } from 'constants/site-config';
 import { getLocaleFromUrl } from '@/i18n';
 import Navigator from './Navigator';
 
@@ -50,6 +51,11 @@ const locale = getLocaleFromUrl(Astro.url.pathname);
       />
     </div>
     <Navigator client:load currentPath={Astro.url.pathname} locale={locale} />
+    {bgmConfig.enabled && bgmConfig.audio.length > 0 && (
+      <div class="tablet:hidden border-l border-black/10 pl-3 dark:border-white/20">
+        <MusicPlayer client:load compact audioGroups={bgmConfig.audio} metingApi={bgmConfig.metingApi} variant="adaptive" />
+      </div>
+    )}
   </div>
   {christmasConfig.enabled && christmasConfig.features.christmasCoverDecoration && <ChristmasLights />}
   {christmasConfig.enabled && <ChristmasOrnamentToggle client:only="react" />}
