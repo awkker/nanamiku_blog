@@ -10,11 +10,12 @@ import { Dialog, DialogPortal } from '@components/ui/dialog';
 import { useIsMounted } from '@hooks/useIsMounted';
 import { useEscapeKey, useKeyboardShortcut } from '@hooks/useKeyboardShortcut';
 import { useTranslation } from '@hooks/useTranslation';
+import { createLiquidGlass, type LiquidGlassController } from '@lib/liquidGlass';
 import { cn } from '@lib/utils';
 import { useStore } from '@nanostores/react';
 import { $isSearchOpen, closeModal, openModal } from '@store/modal';
 import { AnimatePresence, m } from 'motion/react';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 // Icons
 function SearchIcon({ className }: { className?: string }) {
@@ -38,6 +39,29 @@ function CloseIcon({ className }: { className?: string }) {
 export default function SearchDialog() {
   const { t } = useTranslation();
   const isOpen = useStore($isSearchOpen);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const glassRef = useRef<LiquidGlassController | null>(null);
+
+  // 搜索弹窗容器挂液态玻璃滤镜（与顶栏/Dock 同源）。
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    glassRef.current = createLiquidGlass(frame, {
+      borderRadius: 12,
+      cornerSoftness: 0.25,
+      blur: 18,
+      contrast: 1.08,
+      brightness: 1.03,
+      saturate: 1.3,
+      displacementStrength: 0.5,
+      edgeRefractionStrength: 0.4,
+      interactive: true,
+    });
+    return () => {
+      glassRef.current?.destroy();
+      glassRef.current = null;
+    };
+  }, []);
 
   // Cmd/Ctrl + K to open
   useKeyboardShortcut({
@@ -109,7 +133,8 @@ export default function SearchDialog() {
                   transition={{ duration: 0.2 }}
                 >
                   <m.div
-                    className="w-full max-w-3xl overflow-auto rounded-xl bg-gradient-start text-foreground shadow-box"
+                    ref={frameRef}
+                    className="liquid-search-frame w-full max-w-3xl overflow-auto rounded-xl text-foreground"
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}

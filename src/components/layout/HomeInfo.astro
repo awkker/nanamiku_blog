@@ -54,7 +54,7 @@ const strippedPath = stripLocaleFromPath(Astro.url.pathname);
   <div
     class="text-muted-foreground mt-3 flex justify-center text-center text-sm/4 whitespace-nowrap select-none dark:text-white/80"
   >
-    <a href={localizedPath('/', locale)} class="hover:text-blue flex cursor-pointer flex-col gap-2 p-1 transition">
+    <a href={localizedPath('/blog', locale)} class="hover:text-blue flex cursor-pointer flex-col gap-2 p-1 transition">
       <span class="text-lg/5 font-bold">{postCount}</span>
       {t(locale, 'homeInfo.articles')}
     </a>

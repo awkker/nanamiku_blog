@@ -16,7 +16,7 @@ const defaultBaseUrl = localizedPath('/posts', locale);
 const { page, baseUrl = defaultBaseUrl, isHomePage = false } = Astro.props;
 
 // 生成页面链接的辅助函数
-const homeUrl = localizedPath('/', locale);
+const homeUrl = localizedPath('/blog', locale);
 const getPageUrl = (pageNum: number) => {
   if (isHomePage) {
     return pageNum === 1 ? homeUrl : `${baseUrl}/${pageNum}`;

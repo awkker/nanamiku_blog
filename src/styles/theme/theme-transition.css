@@ -46,6 +46,46 @@ html.theme-transition #site-header {
   view-transition-name: none;
 }
 
+/* ============================================================================
+ * 页面转场（与开屏页一致的缩放淡入淡出）
+ * 用于跨文档导航（如开屏 → 博客）以及博客内 Astro SPA 切换，
+ * 视觉上与开屏的转场动画完全一致。
+ * ========================================================================== */
+
+/* 同源跨文档导航启用浏览器原生 View Transition */
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes splash-vt-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes splash-vt-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02) translateY(8px);
+  }
+}
+
+::view-transition-old(root) {
+  animation: 220ms cubic-bezier(0.4, 0, 0.2, 1) both splash-vt-out;
+}
+
+::view-transition-new(root) {
+  animation: 280ms cubic-bezier(0.4, 0, 0.2, 1) both splash-vt-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 /* 尊重用户的减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
   html.theme-transition::view-transition-new(root),
