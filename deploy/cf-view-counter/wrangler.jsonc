@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nanamiku-post-views",
+  "main": "worker.js",
+  "compatibility_date": "2025-06-01",
+  "kv_namespaces": [
+    {
+      "binding": "VIEWS",
+      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+    }
+  ]
+}

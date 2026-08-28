@@ -1,0 +1,424 @@
+---
+import HeroParallax from './components/HeroParallax.tsx';
+/**
+ * 开屏页（挂载于根路径 /）。
+ *
+ * 从旧项目 nanamiku-blog 迁移而来，作为新博客的入口门面：
+ * 1. 顶部品牌栏 + 右上角小组件（音乐 / 时钟）
+ * 2. 中央主视觉区（标题、副标题、背景视差）
+ * 3. 底部 macOS 风格玻璃 Dock 导航（跳转到新博客页面）
+ *
+ * 迁移说明：
+ * - 旧项目的 Vue 组件已用新博客原生技术栈（React）重写，视觉与交互 1:1 保持
+ * - 文案 / 背景图 / Dock 项统一来自 `lib/copy.ts`（纯静态，无后端）
+ * - 天气组件依赖旧后端 /weather 接口，已移除
+ * - 本页只引入 splash.css，不加载主题的全局样式，视觉完全独立
+ */
+import HomeBottomDock from './components/HomeBottomDock.tsx';
+import HomeHeroIntro from './components/HomeHeroIntro.tsx';
+import HomeTopbarWidgets from './components/HomeTopbarWidgets.tsx';
+import { copy } from './lib/copy';
+import './styles/splash.css';
+
+interface Props {
+  // 由 [lang]/index.astro mirror 传入；开屏目前为单语言中文门面，
+  // 保留该 prop 以便将来按语言扩展文案。
+  locale?: string;
+}
+
+const { brand, home } = copy;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{home.metaTitle}</title>
+    <meta name="description" content={home.metaDescription} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={home.metaTitle} />
+    <meta property="og:description" content={home.metaDescription} />
+    <!-- 字体与主题对齐：异步加载寒蝉全圆体（同 layouts/HeadMeta.astro 的方式） -->
+    <link rel="stylesheet" href="/fonts/ChillRoundFRegular/result.css" media="print" onload="this.setAttribute('media','all')" />
+    <link rel="stylesheet" href="/fonts/ChillRoundFBold/result.css" media="print" onload="this.setAttribute('media','all')" />
+    <script is:inline>
+      // 主题与博客同步（同 layouts/BootScripts.astro）：立即给 html 打 .dark 类防止闪烁。
+      (function () {
+        function getTheme() {
+          if (localStorage.theme === 'dark') return 'dark';
+          if (localStorage.theme === 'light') return 'light';
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.classList.toggle('dark', getTheme() === 'dark');
+      })();
+    </script>
+  </head>
+  <body class="overflow-hidden bg-slate-900 text-[#39c5bb]">
+    <main class="relative h-screen w-screen overflow-hidden">
+      <!-- 背景视差层放在最底部，用来提供开屏的氛围感。 -->
+      <HeroParallax client:load />
+
+      <!-- 漂浮玻璃光点：纯装饰氛围层（位置/节奏由索引确定性生成）。 -->
+      <div class="splash-particles" aria-hidden="true">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span
+            style={`left:${(i * 7.3 + 3) % 94}%;top:${(i * 13.7 + 8) % 88}%;width:${3 + (i % 4) * 1.8}px;height:${3 + (i % 4) * 1.8}px;animation-delay:${(i * 0.9) % 6}s;animation-duration:${7 + (i % 5) * 1.6}s`}
+          />
+        ))}
+      </div>
+
+      <!--
+        顶部栏负责两件事：
+        1. 左侧展示品牌 logo 和站点名
+        2. 右侧挂载音乐播放器与时钟小组件
+      -->
+      <header
+        class="absolute left-0 top-0 z-20 flex h-8 w-full items-center justify-between border-b border-white/30 bg-white/35 px-2.5 text-sm font-medium text-[#39c5bb]/90 backdrop-blur-none min-[380px]:px-3 sm:px-4"
+      >
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 rounded-[18px] border border-white/45 bg-white/72 px-2.5 py-1 text-[13px] font-semibold tracking-[0.01em] text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.1)] transition hover:border-miku/35 hover:text-miku"
+        >
+          <img
+            src="/picture/logo-64.webp"
+            alt={brand.logoAlt}
+            class="h-5 w-5 rounded-lg object-cover"
+            width="20"
+            height="20"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
+          <span class="whitespace-nowrap">{brand.text}</span>
+        </a>
+
+        <!-- 右上角的小组件交给独立 React 岛屿处理。 -->
+        <HomeTopbarWidgets client:load />
+      </header>
+
+      <!--
+        中央主视觉区只负责「放置」主视觉组件。
+        `HomeHeroIntro` 自己读取静态文案并渲染标题与副标题。
+      -->
+      <section class="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center">
+        <HomeHeroIntro client:load />
+      </section>
+
+      <!-- 底部 Dock 交给独立组件处理，页面只负责放置位置。 -->
+      <HomeBottomDock client:load />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  /* ===== 开屏页专属视觉（页面管理，组件只负责结构与交互） ===== */
+
+  /* 入场动画 keyframes（不依赖 Tailwind 类名生成）。 */
+  @keyframes fade-up {
+    0% { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 漂浮玻璃光点。 */
+  .splash-particles {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .splash-particles span {
+    position: absolute;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+    filter: blur(0.5px);
+    opacity: 0.45;
+    animation: particle-float ease-in-out infinite alternate;
+  }
+  @keyframes particle-float {
+    from { transform: translateY(0) translateX(0); opacity: 0.25; }
+    to { transform: translateY(-42px) translateX(12px); opacity: 0.7; }
+  }
+
+  /* 播放器「正在播放」均衡器。 */
+  .splash-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 1.5px;
+    height: 10px;
+    margin-left: 4px;
+  }
+  .splash-eq span {
+    width: 2px;
+    height: 100%;
+    border-radius: 1px;
+    background: #39c5bb;
+    transform-origin: bottom;
+    animation: eq-bounce 1s ease-in-out infinite;
+  }
+  .splash-eq span:nth-child(2) { animation-delay: 0.25s; }
+  .splash-eq span:nth-child(3) { animation-delay: 0.5s; }
+  @keyframes eq-bounce {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash-particles span,
+    .splash-eq span {
+      animation: none;
+    }
+  }
+
+  .hero-title {
+    /* 字体与主题对齐：继承寒蝉全圆体栈，只保留开屏专属的字重与行高 */
+    font-weight: 700;
+    line-height: 1.08;
+    position: relative;
+    animation: fade-up 620ms ease-out 0.08s both;
+  }
+
+  /* 标题内部的渐变文字效果。
+     通过 background-clip + 位移动画，让主标题看起来更像开屏视觉。 */
+  .hero-text {
+    background: linear-gradient(
+      90deg,
+      #b4f0ea,
+      #60e8dc 25%,
+      #ffffff 50%,
+      #60e8dc 75%,
+      #b4f0ea
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-flow 5s ease-in-out infinite alternate;
+    position: relative;
+    display: inline-block;
+  }
+
+  /* 渐变流动动画：推动背景渐变左右移动。 */
+  @keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* ===== 背景视差（HeroParallax） ===== */
+
+  .parallax-layer {
+    inset: -30px;
+    transform-origin: 50% 50%;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .parallax-img {
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+  }
+
+  .parallax-img.is-active {
+    opacity: 1;
+  }
+
+  /* ===== 副标题打字机（TypewriterSubtitle） ===== */
+
+  .subtitle-shell {
+    margin-top: 1.35rem;
+    width: min(88vw, 700px);
+    border: 1px solid rgba(240, 255, 252, 0.62);
+    border-radius: 1.5rem;
+    background: rgba(248, 254, 252, 0.34);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.58),
+      0 10px 28px rgba(8, 25, 32, 0.16);
+    animation: fade-up 620ms ease-out 0.18s both;
+  }
+
+  .subtitle-text {
+    margin: 0;
+    padding: clamp(0.72rem, 1.25vw, 0.92rem) clamp(1rem, 2.2vw, 1.6rem);
+    text-align: center;
+    color: rgba(57, 197, 187, 0.9);
+    /* 字体与主题对齐：继承寒蝉全圆体栈 */
+    font-size: clamp(1rem, 1.35vw, 1.22rem);
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+  }
+
+  .subtitle-cursor {
+    opacity: 0.65;
+  }
+
+  /* ===== 音乐播放器（MusicPlayer） ===== */
+
+  .player-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+  .player-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #39c5bb;
+    cursor: pointer;
+  }
+  .player-range-lg {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(15, 23, 42, 0.12);
+    border-radius: 9999px;
+    height: 4px;
+  }
+  .dark .player-range-lg {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .player-range-lg::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #39c5bb;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(57, 197, 187, 0.4);
+  }
+
+  /* 展开面板的遮罩与卡片（替代 Vue Transition 的 fade / card-slide）。 */
+  .player-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .player-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .player-panel {
+    position: fixed;
+    right: 0.5rem;
+    top: 2.5rem;
+    z-index: 50;
+    width: calc(100vw - 1rem);
+    max-width: 24rem;
+    border-radius: 1rem;
+    /* 白天：亮色玻璃 */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.72);
+    padding: 1rem;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* 夜间：深色玻璃（与博客 .dark 主题同步） */
+  .dark .player-panel {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.88);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  .player-panel.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  @media (min-width: 380px) {
+    .player-panel {
+      right: 0.75rem;
+      padding: 1.25rem;
+    }
+  }
+  @media (min-width: 640px) {
+    .player-panel {
+      right: 1rem;
+      width: 20rem;
+    }
+  }
+
+  /* ===== 底部 Dock（HomeBottomDock） ===== */
+
+  .dock-shell {
+    transform: translateZ(0);
+    border-color: rgba(225, 255, 251, 0.76);
+    background: linear-gradient(
+      145deg,
+      rgba(241, 255, 253, 0.52) 0%,
+      rgba(212, 252, 247, 0.28) 38%,
+      rgba(57, 197, 187, 0.14) 100%
+    );
+    box-shadow:
+      0 14px 34px rgba(9, 77, 73, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.76),
+      inset 0 -10px 22px rgba(57, 197, 187, 0.08);
+  }
+
+  .dock-shell::before {
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.48) 8%, rgba(255, 255, 255, 0) 40%);
+  }
+
+  .dock-shell::after {
+    display: none;
+  }
+
+  .dock-icon {
+    transform-origin: center bottom;
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 180ms ease;
+    will-change: transform;
+  }
+
+  .dock-icon svg {
+    filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.2));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock-icon,
+    .dock-icon svg {
+      transition-duration: 0.01ms;
+    }
+  }
+
+  /* ===== 液态玻璃容器（LiquidGlassCard） ===== */
+
+  .liquid-glass-frame {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.12) 100%);
+    box-shadow:
+      0 10px 36px rgba(10, 18, 34, 0.12),
+      inset 0 1px 1px rgba(255, 255, 255, 0.75),
+      inset 0 -10px 26px rgba(255, 255, 255, 0.1);
+  }
+
+  .liquid-glass-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.56) 5%, rgba(255, 255, 255, 0) 40%);
+    pointer-events: none;
+  }
+
+  .liquid-glass-content {
+    position: relative;
+    z-index: 1;
+  }
+</style>

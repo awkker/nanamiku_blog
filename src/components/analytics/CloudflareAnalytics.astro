@@ -1,0 +1,16 @@
+---
+/**
+ * Cloudflare Web Analytics（Beacon）
+ *
+ * 纯前端、无 Cookie 的官方统计脚本。配置 site.yaml 的
+ * `analytics.cloudflare`（enabled + token）即可启用。
+ */
+import { analyticsConfig } from '@constants/site-config';
+
+const config = analyticsConfig.cloudflare;
+const enabled = config?.enabled === true && Boolean(config.token);
+---
+
+{enabled && (
+  <script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={config?.token} />
+)}

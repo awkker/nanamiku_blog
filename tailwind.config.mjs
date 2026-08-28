@@ -33,7 +33,7 @@ export default {
         gray: {
           400: 'hsl(var(--grey-4))',
         },
-        logo: '#e91e63',
+        logo: '#39c5bb',
         mandy: {
           50: '#fef2f3',
           100: '#fde6e8',
@@ -52,6 +52,10 @@ export default {
           a3: 'var(--color-pink-a3)',
           DEFAULT: 'var(--color-pink)',
         },
+        // 开屏页品牌色（从旧项目迁移）
+        miku: 'rgb(57 197 187)',
+        'miku-soft': 'rgba(57, 197, 187, 0.12)',
+        'miku-strong': 'rgba(57, 197, 187, 0.8)',
       },
       borderRadius: {
         ...borderRadius,
@@ -64,6 +68,15 @@ export default {
         ...shadows,
       },
       keyframes: {
+        // 开屏页动画（从旧项目迁移）
+        blink: {
+          '0%, 49%': { opacity: '1' },
+          '50%, 100%': { opacity: '0' },
+        },
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(24px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
         'vertical-shake': {
           '0%': { transform: 'scale(1)' },
           '10%': { transform: 'scale(.9) rotate(3deg)' },
@@ -102,6 +115,9 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slide-in-from-right': 'slide-in-from-right 0.2s ease-in-out',
         'slide-out-to-left': 'slide-out-to-left 0.2s ease-in-out',
+        // 开屏页动画（从旧项目迁移）
+        blink: 'blink 1s step-end infinite',
+        'fade-up': 'fade-up 620ms ease-out both',
       },
       transitionDuration: {
         fast: `${animationTokens.duration.fast}ms`,

@@ -1,6 +1,4 @@
 ---
-import LogoSvg from '@assets/svg/logo.svg?react';
-import logoSrc from '@assets/svg/logo.svg?url';
 import ChristmasLights from '@components/christmas/ChristmasLights.astro';
 import { ChristmasOrnamentToggle } from '@components/christmas/ChristmasOrnamentToggle';
 import { MobilePostHeader } from '@components/layout/MobilePostHeader';
@@ -9,6 +7,9 @@ import { MAX_WIDTH } from '@constants/layout';
 import { christmasConfig, siteConfig } from 'constants/site-config';
 import { getLocaleFromUrl } from '@/i18n';
 import Navigator from './Navigator';
+
+// Logo 与开屏页统一：使用旧项目迁移来的 logo 图
+const logoSrc = '/picture/logo-64.webp';
 
 interface Props {
   isPostPage?: boolean;
@@ -22,7 +23,7 @@ const locale = getLocaleFromUrl(Astro.url.pathname);
 
 <div
   id="site-header"
-  class={`shadow-text fixed tablet:backdrop-blur inset-x-0 top-0 z-30 gap-4 py-2.5 text-white select-none tablet:py-2 tablet:pl-3 tablet:pr-0 overflow-visible`}
+  class={`liquid-header shadow-text fixed tablet:backdrop-blur inset-x-0 top-0 z-30 gap-4 py-2.5 text-white select-none tablet:py-2 tablet:pl-3 tablet:pr-0 overflow-visible`}
   transition:name="site-header"
 >
   <div class={`mx-auto flex items-center justify-between tablet:w-full px-6 tablet:pl-10 tablet:pr-3 ${MAX_WIDTH.content}`}>
@@ -35,7 +36,7 @@ const locale = getLocaleFromUrl(Astro.url.pathname);
       title={alternate || title}
       aria-label={alternate || title}
     >
-      {showLogo ? <LogoSvg className="h-8" /> : <p class="logo-text">{alternate || title}</p>}
+      {showLogo ? <img src={logoSrc} alt={alternate || title} class="h-8 w-8 rounded-lg object-cover" /> : <p class="logo-text">{alternate || title}</p>}
     </a>
     <!-- Mobile: MobilePostHeader (shows heading on post pages, logo otherwise) -->
     <div class="tablet:flex tablet:grow hidden items-center justify-center">

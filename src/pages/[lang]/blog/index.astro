@@ -1,0 +1,20 @@
+---
+/**
+ * 非默认语言（en / ja）的博客首页镜像（挂载于 /en/blog、/ja/blog）。
+ *
+ * i18n 镜像完整性检查（assertLocaleMirrorsComplete）要求
+ * 每个根路由都有 [lang]/ 对应页面。
+ */
+import { getLocaleStaticPaths } from '../../_shared/utils';
+import HomePage from '../../blog/index.astro';
+
+export const getStaticPaths = getLocaleStaticPaths;
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+---
+
+<HomePage locale={locale} />

@@ -17,6 +17,7 @@ interface Props extends PageMetaProps {
 }
 
 import { ClientRouter } from 'astro:transitions';
+import CloudflareAnalytics from '@components/analytics/CloudflareAnalytics.astro';
 import UmamiAnalytics from '@components/analytics/UmamiAnalytics.astro';
 import { seoConfig } from '@constants/site-config';
 import LoadingIndicator from 'astro-loading-indicator/component';
@@ -50,6 +51,7 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
 
     <ClientRouter />
     <UmamiAnalytics />
+    <CloudflareAnalytics />
     <LoadingIndicator color="#e9536a" />
     <Tooltips />
 

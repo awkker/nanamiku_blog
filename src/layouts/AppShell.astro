@@ -16,6 +16,7 @@ import ChristmasEffects from '@components/christmas/ChristmasEffects.astro';
 import CodePenEmbed from '@components/embed/CodePenEmbed.astro';
 import FloatingGroup from '@components/layout/FloatingGroup';
 import Header from '@components/layout/Header.astro';
+import HeaderGlass from '@components/layout/HeaderGlass';
 import MobileDrawer from '@components/layout/MobileDrawer.astro';
 import SearchDialog from '@components/layout/SearchDialog';
 import SearchPortal from '@components/layout/SearchPortal.astro';
@@ -32,6 +33,7 @@ const { post, siderType, isPostPage } = Astro.props;
 <ChristmasEffects transition:persist="christmas-snowfall" />
 <div class="flex min-h-screen flex-col text-black dark:text-white">
   <Header isPostPage={isPostPage} tocNumbering={post?.data.tocNumbering ?? true} />
+  <HeaderGlass client:load />
   <main class="relative flex grow flex-col gap-4">
     {(<slot />)}
   </main>

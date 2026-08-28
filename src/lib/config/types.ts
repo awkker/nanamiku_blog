@@ -513,8 +513,22 @@ export interface UmamiConfig {
   };
 }
 
+export interface CloudflareAnalyticsConfig {
+  /** Cloudflare Web Analytics（Beacon）开关与 token */
+  enabled: boolean;
+  token: string;
+}
+
+export interface CfViewCounterConfig {
+  /** 文章阅读量（Cloudflare Workers + KV）开关与 Worker 地址 */
+  enabled: boolean;
+  endpoint: string;
+}
+
 export interface AnalyticsConfig {
   umami?: UmamiConfig;
+  cloudflare?: CloudflareAnalyticsConfig;
+  cfViewCounter?: CfViewCounterConfig;
 }
 
 // =============================================================================

@@ -1,10 +1,11 @@
 ---
+import PostViewCounter from '@components/analytics/PostViewCounter';
 // 导入所需的库和类型
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
 import { ScrollableRow } from '@components/ui/ScrollableRow';
 import { Routes } from '@constants/router';
-import { createArticleStatsConfig, defaultCoverList } from '@constants/site-config';
+import { analyticsConfig, createArticleStatsConfig, defaultCoverList } from '@constants/site-config';
 import { buildCategoryPath, buildTagPath, getCategoryArr, translateCategoryName } from '@lib/content';
 import { displayDate } from '@lib/date';
 import { getLqipProps } from '@lib/lqip';
@@ -45,6 +46,10 @@ const finalCover = cover ?? randomCover ?? defaultCoverList[0];
 const href = localizedPath(routeBuilder(Routes.Post, { slug, link, title }), locale);
 const isDraft = import.meta.env.DEV && draft === true;
 const isFallback = postLocale != null && locale !== defaultLocale && postLocale !== locale;
+
+// Cloudflare Workers + KV 文章阅读量（未配置时不渲染）
+const cfViewCounter = analyticsConfig.cfViewCounter;
+const cfViewEnabled = cfViewCounter?.enabled === true && Boolean(cfViewCounter.endpoint);
 
 const categoryArr = getCategoryArr(categories?.[0]);
 const categoryLink = localizedPath(buildCategoryPath(categoryArr), locale);
@@ -148,6 +153,13 @@ const pageStatsConfig = createArticleStatsConfig(href);
           <Icon name="fa6-solid:clock" />
           {readingTime}
         </button>
+
+        {cfViewEnabled && slug && (
+          <span class="flex-center gap-1 whitespace-nowrap">
+            <Icon name="ri:eye-line" class="h-4 w-4" />
+            <PostViewCounter client:visible endpoint={cfViewCounter?.endpoint ?? ''} slug={slug} />
+          </span>
+        )}
 
         {pageStatsConfig && (
           <span class="flex-center gap-1 whitespace-nowrap">

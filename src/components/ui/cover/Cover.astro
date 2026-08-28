@@ -1,6 +1,8 @@
 ---
+import PostViewCounter from '@components/analytics/PostViewCounter';
 import { Routes } from '@constants/router';
-import { createArticleStatsConfig, siteConfig } from '@constants/site-config';
+import { analyticsConfig, createArticleStatsConfig, siteConfig } from '@constants/site-config';
+import { getPostSlug } from '@lib/content';
 import { getPostReadingTime } from '@lib/content/posts';
 import { displayDate } from '@lib/date';
 import { getLqipStyle } from '@lib/lqip';
@@ -37,6 +39,11 @@ const pageStatsConfig = href ? createArticleStatsConfig(href) : null;
 const copyLinkLabel = t(locale, 'cover.copyLink');
 const copiedLabel = t(locale, 'common.copied');
 const copyFailedLabel = t(locale, 'common.copyFailed');
+
+// Cloudflare Workers + KV 文章阅读量（未配置时不渲染）
+const cfViewCounter = analyticsConfig.cfViewCounter;
+const cfViewEnabled = cfViewCounter?.enabled === true && Boolean(cfViewCounter.endpoint);
+const postSlug = data ? getPostSlug(data) : null;
 ---
 
 <div
@@ -109,6 +116,12 @@ const copyFailedLabel = t(locale, 'common.copyFailed');
                 <Icon name="fa6-solid:clock" />
                 {readState?.text}
               </span>
+              {cfViewEnabled && postSlug && (
+                <span class="flex items-center gap-1">
+                  <Icon name="ri:eye-line" class="h-4 w-4" />
+                  <PostViewCounter client:idle endpoint={cfViewCounter?.endpoint ?? ''} slug={postSlug} />
+                </span>
+              )}
               {pageStatsConfig && (
                 <span class="flex items-center gap-1">
                   <Icon name="ri:eye-line" class="h-4 w-4" />
