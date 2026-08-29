@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
 
 import { copy } from '../lib/copy';
-import { heroImages, heroIndex, shuffleHeroImage } from '../stores/heroImage';
+import { heroImages, heroIndex } from '../stores/heroImage';
 
 const hp = copy.components.heroParallax;
 
@@ -25,11 +25,8 @@ export default function HeroParallax() {
     setCurrentIndex($heroIndex);
   }, [$heroIndex]);
 
-  // 首次进入随机挑一张图，避免每次都从同一张开始。
-  useEffect(() => {
-    shuffleHeroImage();
-    setCurrentIndex(heroIndex.get());
-  }, []);
+  // 首次进入固定显示第一张图（不做随机切换，避免进入页面时图片跳动）；
+  // 换图仅由 Dock 的「换图」按钮手动触发。
 
   // 鼠标视差 + 缓动循环。
   useEffect(() => {

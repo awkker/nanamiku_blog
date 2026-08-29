@@ -409,19 +409,24 @@ const { brand, home } = copy;
   }
 
   .dock-icon {
-    /* 静态玻璃观感放 CSS；transform/阴影由 rAF 每帧直接驱动，
-       不再使用 transition，避免与惯性插值叠加造成拖尾。 */
-    background: linear-gradient(180deg, #83efe5 0%, #39c5bb 100%);
-    border-color: rgba(238, 255, 252, 0.88);
+    /* 半透明液态玻璃观感（transform/阴影由 rAF 每帧直接驱动，
+       不再使用 transition，避免与惯性插值叠加造成拖尾）。 */
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border-color: rgba(255, 255, 255, 0.65);
     color: rgba(255, 255, 255, 0.97);
     transform-origin: center bottom;
     will-change: transform;
   }
 
-  /* 夜间：Dock 图标换薰衣草紫渐变 */
+  /* 夜间：Dock 图标换薰衣草紫玻璃 */
   .dark .dock-icon {
-    background: linear-gradient(180deg, #d8b4fe 0%, #c084fc 100%);
-    border-color: rgba(233, 213, 255, 0.8);
+    background: rgba(192, 132, 252, 0.2);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border-color: rgba(216, 180, 254, 0.55);
+    color: rgba(233, 213, 255, 0.97);
   }
 
   /* Dock 弹出阴影与指示点颜色随主题两态 */
