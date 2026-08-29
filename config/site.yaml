@@ -11,17 +11,17 @@
 # Site Basic Information
 # =============================================================================
 site:
-  title: 余弦の博客 # 网站名称
-  alternate: cosine # 网站英文名称 用于页脚、Logo、@ handle 等
-  subtitle: WA 的一声就哭了 # 网站副标题
-  name: cos # 作者名称 - 请修改为你的名字
+  title: 薰逸の猫窝 # 网站名称
+  alternate: KaoruNeko # 网站英文名称 用于页脚、Logo、@ handle 等
+  subtitle: 埋骨何须桑梓地，人生无处不青山。 # 网站副标题
+  name: 薰逸酱 # 作者名称 - 请修改为你的名字
   description: 一个基于 Astro 的现代化博客主题 # 网站描述
-  avatar: /img/avatar.webp # 网站头像
+  avatar: /img/author.jpg # 网站头像
   showLogo: true # 是否显示 Logo
-  author: Author # 作者名称 - 请修改为你的名字
+  author: 薰逸酱 # 作者名称 - 请修改为你的名字
   url: https://koharu.cosine.ren # 站点 URL 用于 RSS 和 SEO
-  defaultOgImage: /img/avatar.webp # 默认 Open Graph 图片
-  startYear: 2024 # 建站年份
+  defaultOgImage: /img/author.jpg # 默认 Open Graph 图片
+  startYear: 2026 # 建站年份
   timezone: Asia/Shanghai # 时区配置 (IANA 格式)，用于日期显示和处理
   keywords: # SEO 关键词 (全局)
     - 博客
@@ -89,19 +89,19 @@ categoryMap:
 featuredCategories:
   - link: life # 对应 categoryMap 中 随笔: life
     label: 随笔
-    image: /img/cover/2.webp
+    image: /img/webp/2.webp
     description: 生活记录、随想随笔
   - link: note # 对应 categoryMap 中 笔记: note
     label: 笔记
-    image: /img/cover/4.webp
+    image: /img/webp/4.webp
     description: 技术笔记、学习笔记
   - link: note/front-end # 嵌套分类：笔记/前端
     label: 前端
-    image: /img/cover/1.webp
+    image: /img/webp/1.webp
     description: 前端技术相关
   - link: tools # 对应 categoryMap 中 工具: tools
     label: 工具
-    image: /img/cover/11.webp
+    image: /img/webp/11.webp
     description: 工具使用、效率提升
 
 # =============================================================================
@@ -131,7 +131,7 @@ featuredSeries:
       你可以用它来发布定期更新的系列内容，如技术周刊、读书笔记系列等。
       设置 enabled: false 可以关闭此功能。
     cover: /img/weekly_header.webp # 系列页面头图
-    enabled: true # 启用此系列
+    enabled: false # 启用此系列
     icon: ri:newspaper-line # 导航图标
     links: # 相关链接（可选）
       github: https://github.com/your-username/your-repo # (可选) GitHub 仓库
@@ -162,11 +162,11 @@ featuredSeries:
 # -----------------------------------------------------------------------------
 social:
   github:
-    url: https://github.com/your-username # 替换为你的 GitHub 链接
+    url: https://github.com/awkker # 替换为你的 GitHub 链接
     icon: ri:github-fill # Remix Icon 的 GitHub 图标
     color: '#191717' # (可选) 图标颜色
   email:
-    url: mailto:your@email.com # 替换为你的邮箱，需加 mailto: 前缀
+    url: mailto:chw0536@126.com # 替换为你的邮箱，需加 mailto: 前缀
     icon: ri:mail-line
     color: '#55acd5'
   rss:
@@ -176,14 +176,14 @@ social:
   # -------------------------------------------------------------------------
   # 以下是更多可选的社交平台配置示例，取消注释并修改即可启用：
   # -------------------------------------------------------------------------
-  # twitter:
-  #   url: https://x.com/your-handle
-  #   icon: ri:twitter-fill
-  #   color: '#4b9ae4'
-  # bilibili:
-  #   url: https://space.bilibili.com/your-id
-  #   icon: ri:bilibili-fill
-  #   color: '#da708a'
+  twitter:
+     url: https://x.com/XunCao81317
+     icon: ri:twitter-fill
+     color: '#4b9ae4'
+  bilibili:
+     url: https://space.bilibili.com/472356194?spm_id_from=333.1007.0.0
+     icon: ri:bilibili-fill
+     color: '#da708a'
   # zhihu:
   #   url: https://www.zhihu.com/people/your-id
   #   icon: ri:zhihu-fill
@@ -231,25 +231,7 @@ friends:
       desc: FE / ACG / 手工 / 深色模式强迫症 / INFP / 兴趣广泛养两只猫的老宅女 / remote
       image: https://blog.cosine.ren/img/avatar.webp
       color: '#ed788b'
-    - site: 示例博客 A
-      url: https://example-a.com
-      owner: Alice
-      desc: 一个热爱技术的开发者
-      image: https://api.dicebear.com/7.x/avataaars/svg?seed=Alice
-      color: '#BEDCFF'
-    - site: 示例博客 B
-      url: https://example-b.com
-      owner: Bob
-      desc: 分享生活与技术的小站
-      image: https://api.dicebear.com/7.x/avataaars/svg?seed=Bob
-      color: '#FBC1CC'
-    - site: 示例博客 C
-      url: https://example-c.com
-      owner: Carol
-      desc: 记录学习与成长的地方
-      image: https://api.dicebear.com/7.x/avataaars/svg?seed=Carol
-      color: '#ABDCFF'
-
+  
 # =============================================================================
 # Announcements
 # 公告系统 - 在页面顶部显示重要通知
@@ -303,10 +285,10 @@ announcements:
 # =============================================================================
 # Default Cover List
 # 默认封面列表 - 文章没有指定封面时将随机从列表中选择一张作为封面
-# 不设置则使用内置的 21 张默认封面 (/img/cover/1~21.webp)
+# 不设置则使用内置的 21 张默认封面 (/img/webp/1~21.webp)
 # =============================================================================
 # defaultCoverList:
-#   - /img/cover/1.webp
+#   - /img/webp/1.webp
 #   - https://example.com/custom-cover.webp
 
 
@@ -591,7 +573,7 @@ comment:
 # -----------------------------------------------------------------------------
 analytics:
   umami:
-    enabled: true
+    enabled: false
     id: your-umami-id
     endpoint: https://stats.example.com
     # statistics_display:
@@ -632,14 +614,17 @@ seo:
 # =============================================================================
 bgm:
   enabled: true  # (有 audio 时自动启用，显式 false 可禁用)
-  # metingApi: https://163.hyc.moe/  # Meting API 地址，默认为 https://163.hyc.moe/，推荐自部署
+  metingApi: 'https://163.hyc.moe/api/' # Meting API 地址（主题默认值缺少 /api 路径，这里显式覆盖）
   audio:
-    - title: 最爱山山
-      list:
-        - https://music.163.com/playlist?id=8676645748
     - title: Love Vocaloid
       list:
-        - https://music.163.com/playlist?id=8882890045
+        - https://music.163.com/playlist?id=12355691384
+    - title: Love J-pop
+      list:
+        - https://music.163.com/playlist?id=18332302509
+    - title: ArKnights
+      list:
+        - https://music.163.com/playlist?id=10185933927
 
 christmas:
   enabled: false # 总开关
@@ -668,7 +653,7 @@ christmas:
 #   icon: 导航图标，Iconify 格式（可选，默认：ri:bilibili-fill）
 # -----------------------------------------------------------------------------
 bangumi:
-  userId: cosine
+  userId: 1278384
   # label: 追番
   # icon: ri:bilibili-fill
 
@@ -687,18 +672,10 @@ bangumi:
 #     - urlTemplate: URL 模板，支持占位符 {path}（文件绝对路径）
 # -----------------------------------------------------------------------------
 dev:
-  localProjectPath: '/Users/yourname/path/to/astro-koharu' # 请修改为你的项目绝对路径
+  localProjectPath: '/Users/awkker/Documents/xunyi/nanamiku/nanamiku_blog' # 项目绝对路径
   contentRelativePath: 'src/content/blog'
   editors:
     - id: vscode
       name: VS Code
       icon: devicon-plain:vscode
       urlTemplate: 'vscode://file/{path}'
-    - id: cursor
-      name: Cursor
-      icon: simple-icons:cursor
-      urlTemplate: 'cursor://file/{path}'
-    - id: zed
-      name: Zed
-      icon: simple-icons:zedindustries
-      urlTemplate: 'zed://file/{path}'
