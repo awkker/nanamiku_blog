@@ -14,19 +14,19 @@ export interface HomeDockItem {
 
 export const copy = {
   brand: {
-    logoAlt: 'NanaMiku Blog logo',
-    text: 'NanaMiku Blog',
+    logoAlt: '薰逸の猫窝 logo',
+    text: '薰逸の猫窝',
   },
   seo: {
     siteUrl: 'https://koharu.cosine.ren',
-    siteTitle: 'nanamiku blog',
+    siteTitle: '薰逸の猫窝',
   },
   home: {
-    metaTitle: 'nanamiku blog',
-    metaDescription: 'nanamiku blog 开屏页',
-    heroTitle: '创作入口',
-    heroSubtitle: '把写作、作品与公开资料收拢到同一站点。',
-    heroImages: ['/picture/fengmian/封面.avif', '/picture/fengmian/bloglist.jpg'],
+    metaTitle: '薰逸の猫窝',
+    metaDescription: '埋骨何须桑梓地，人生无处不青山。',
+    heroTitle: '薰逸の猫窝',
+    heroSubtitle: '埋骨何须桑梓地，人生无处不青山。',
+    heroImages: ['/img/webp/6.webp', '/img/webp/9.webp', '/img/webp/21.webp'],
     // Dock 主导航。纯静态站没有说说/留言/登录/后台，
     // 这里映射到新博客实际存在的页面。
     dockItems: [

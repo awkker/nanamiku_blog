@@ -3,32 +3,41 @@ layout: ../layouts/PageLayout.astro
 title: "About"
 coverTitle: "关于我"
 date: 2025-01-03 01:01:33
-description: "关于我？"
+description: "薰逸の猫窝 博主 薰逸酱 的自我介绍"
 ---
 
-## 你好，这里是余弦
+## 你好，这里是薰逸酱 🐾
 
-[![github badge](https://img.shields.io/badge/dynamic/json?color=blue&label=Github&query=%24.data.totalSubs&url=https%3A%2F%2Fapi.spencerwoo.com%2Fsubstats%2F%3Fsource%3Dgithub%26queryKey%3Dyusixian)](https://github.com/yusixian)
+[![GitHub](https://img.shields.io/badge/GitHub-awkker-39c5bb?style=flat-square&logo=github)](https://github.com/awkker)
 
-cosine = 余弦 = cos
+一只在薰衣草香里敲代码的猫。
 
-愿热情永存，愿热爱不灭，愿生活无憾
+白天是初音绿的，晚上会变成薰衣草紫的（本站深色模式同款作息）。
 
-> 我们 都只是无名之辈 \
-> 做你自己最喜欢的事 \
-> 像花一样 肆意绽放 \
-> 不去管 有没有人欣赏
+喜欢初音未来的歌和一切毛茸茸的东西。
+
+这个猫窝用来堆放：技术笔记、折腾记录、以及一些不着边际的碎碎念。
+
+> 孩儿立志出乡关 \
+> 学不成名誓不还 \
+> 埋骨何须桑梓地 \
+> 人生无处不青山
+
+
 
 ### 找到我
 
-个人 Telegram 前端频道：日常碎碎念，偶尔掉落优质前端博文推荐、学习资源等
+- GitHub：[github.com/awkker](https://github.com/awkker)
+- RSS：[订阅本站](/rss.xml)
 
-https://t.me/cosine_front_end
+### GitHub 状态
 
-Gitbook 前端学习记录
+![GitHub Stats](https://github-stat.cnies.org/api?username=awkker&show_icons=true&theme=sakura)
 
-https://book.cosine.ren/
+![GitHub Streak](https://github-streak-stat.cnies.org?user=awkker&theme=sakura)
 
-[![GitHub State](https://git-stats.cosine.ren/api?username=yusixian&theme=dark&show_icons=true&hide_border=true)](https://github.com/anuraghazra/github-readme-stats)
+![Top Languages](https://github-stat.cnies.org/api/top-langs/?username=awkker&layout=compact&theme=sakura)
 
-[![GitHub Streak](https://github-readme-streak-stats-rust-tau.vercel.app?user=yusixian&theme=dark&date_format=%5BY%20%5DM%20&hide_border=true)](https://git.io/streak-stats)
+---
+
+本站由 [astro-koharu](https://github.com/cosZone/astro-koharu) 主题驱动，纯静态构建，部署在 Cloudflare 上。
