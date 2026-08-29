@@ -168,11 +168,11 @@ dev:
 featuredCategories:
   - link: life # 分类链接（对应 category_map）
     label: 随笔 # 显示名称
-    image: /img/cover/2.webp # 封面图片
+    image: /img/webp/2.webp # 封面图片
     description: 生活记录、年度总结等 # 描述
   - link: note/front-end
     label: 前端笔记
-    image: /img/cover/1.webp
+    image: /img/webp/1.webp
     description: 前端相关的笔记
   # ... 更多分类
 ```
@@ -368,7 +368,7 @@ date: 2024-12-06
 updated: 2024-12-15 # 最近更新时间（可选，存在时会在文章页显示）
 description: 文章摘要描述 # 用于 SEO 和列表展示，如不填写会自动使用 AI 摘要或提取正文前 150 字
 link: custom-url-slug # 自定义 URL（默认使用文件名）
-cover: /img/cover/1.webp # 封面图片
+cover: /img/webp/1.webp # 封面图片
 tags: # 标签列表
   - JavaScript
   - React
@@ -797,7 +797,7 @@ linear-gradient(135deg, #87a3c4 0%, #c2dfef 50%, #bddae9 100%)
 import { getLqipStyle, getLqipProps } from '@lib/lqip';
 
 // 方式 1：直接获取样式字符串
-const style = getLqipStyle('/img/cover/1.webp');
+const style = getLqipStyle('/img/webp/1.webp');
 // 返回: "background-image:linear-gradient(...)"
 
 // 方式 2：获取完整的 props（支持外部图片降级）
@@ -807,7 +807,7 @@ const lqipProps = getLqipProps(coverUrl);
 ---
 
 <div style={style}>
-  <img src="/img/cover/1.webp" />
+  <img src="/img/webp/1.webp" />
 </div>
 ```
 
@@ -2694,7 +2694,7 @@ import { fadeIn } from "@constants/anim/variants";
 在文章 frontmatter 中设置 `cover` 字段：
 
 ```yaml
-cover: /img/cover/1.webp
+cover: /img/webp/1.webp
 ```
 
 图片放在 `public/img/` 目录。如果不设置，会使用默认封面。

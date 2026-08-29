@@ -228,7 +228,7 @@ pie title 博客内容分布
 
 图片会自动应用 LQIP（低质量图片占位符）效果：
 
-![示例图片](/img/cover/3.webp)
+![示例图片](/img/webp/3.webp)
 
 ## Shoka 兼容 Markdown 语法
 

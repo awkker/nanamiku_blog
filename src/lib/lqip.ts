@@ -16,7 +16,7 @@ try {
 
 /**
  * Convert image path to LQIP key
- * @param imagePath Full path like /img/cover/1.webp
+ * @param imagePath Full path like /img/webp/1.webp
  * @returns Short key like cover/1.webp
  */
 function imagePathToKey(imagePath: string): string {
@@ -25,7 +25,7 @@ function imagePathToKey(imagePath: string): string {
 
 /**
  * Get the LQIP gradient CSS for an image
- * @param imagePath Image path (e.g., /img/cover/1.webp)
+ * @param imagePath Image path (e.g., /img/webp/1.webp)
  * @returns CSS gradient string or undefined if not found
  */
 export function getLqipGradient(imagePath: string): string | undefined {

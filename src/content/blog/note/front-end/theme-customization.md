@@ -10,7 +10,7 @@ tags:
   - Tailwind
 categories:
   - [笔记, 前端]
-cover: /img/cover/3.webp
+cover: /img/webp/3.webp
 ---
 
 本文介绍如何定制 astro-koharu 的外观和样式。
