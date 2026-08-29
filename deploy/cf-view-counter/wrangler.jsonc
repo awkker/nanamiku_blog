@@ -1,12 +1,13 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nanamiku-post-views",
-  "main": "worker.js",
-  "compatibility_date": "2025-06-01",
-  "kv_namespaces": [
-    {
-      "binding": "VIEWS",
-      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "nanamiku-post-views",
+	"main": "worker.js",
+	"compatibility_date": "2025-06-01",
+	"kv_namespaces": [
+		{
+			"binding": "VIEWS",
+			"id": "c62b0282be7843acba26758bc9f55b65",
+			"remote": true
+		}
+	]
 }

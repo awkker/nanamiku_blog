@@ -37,3 +37,6 @@ pnpm-debug.log*
 
 # Backup files
 backups/
+
+# Wrangler local state
+.wrangler/
