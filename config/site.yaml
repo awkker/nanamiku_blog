@@ -588,8 +588,8 @@ analytics:
     token: your-cloudflare-web-analytics-token
   # 文章阅读量（Cloudflare Workers + KV，见 deploy/cf-view-counter/README.md）
   cfViewCounter:
-    enabled: false
-    endpoint: https://nanamiku-post-views.your-subdomain.workers.dev
+    enabled: true
+    endpoint: https://nanamiku-post-views.caoxunyi51.workers.dev
 
 # =============================================================================
 # SEO Configuration
