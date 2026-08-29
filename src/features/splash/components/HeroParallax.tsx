@@ -19,7 +19,6 @@ export default function HeroParallax() {
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
 
   // store 索引变化时同步展示状态。
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function HeroParallax() {
   useEffect(() => {
     shuffleHeroImage();
     setCurrentIndex(heroIndex.get());
-    setMounted(true);
   }, []);
 
   // 鼠标视差 + 缓动循环。
@@ -93,6 +91,9 @@ export default function HeroParallax() {
     };
   }, []);
 
+  // 只渲染「当前图 + 下一张预热」，避免首屏加载全部轮播图。
+  const visibleImages = [$heroImages[currentIndex], $heroImages[(currentIndex + 1) % $heroImages.length]];
+
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ perspective: '1200px' }}>
       <div
@@ -100,14 +101,14 @@ export default function HeroParallax() {
         className="parallax-layer absolute"
         style={{ transform: 'rotateX(0deg) rotateY(0deg) translateX(0px) translateY(0px)' }}
       >
-        {$heroImages.map((src, i) => (
+        {visibleImages.map((src, i) => (
           <img
             key={src}
             src={src}
             alt={`${hp.coverAltPrefix}${i + 1}`}
-            className={`parallax-img absolute inset-0 h-full w-full object-cover ${mounted && i === currentIndex ? 'is-active' : ''}`}
-            loading={i === currentIndex ? 'eager' : 'lazy'}
-            fetchPriority={i === currentIndex ? 'high' : 'low'}
+            className={`parallax-img absolute inset-0 h-full w-full object-cover ${i === 0 ? 'is-active' : ''}`}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchPriority={i === 0 ? 'high' : 'low'}
             decoding="async"
             draggable={false}
           />

@@ -467,6 +467,7 @@ export default function MusicPlayer({ audioGroups, metingApi, variant = 'over-da
           <img
             src={track?.pic}
             alt={track?.name ?? ''}
+            loading="lazy"
             className="h-16 w-16 rounded-xl border border-slate-900/10 object-cover shadow-lg dark:border-white/10"
           />
           <div className="min-w-0 flex-1">

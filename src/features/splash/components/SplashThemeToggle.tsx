@@ -28,9 +28,14 @@ function applyThemeWithTransition(dark: boolean) {
 }
 
 export default function SplashThemeToggle() {
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
-  );
+  // SSR 与客户端首渲染统一为 false，挂载后再同步真实主题，
+  // 避免水合不一致（React error #418）。
+  const [isDark, setIsDark] = useState(false);
+
+  // 挂载后同步真实主题状态。
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
 
   // 与其他标签页/博客页面同步（博客切换主题后，开屏跟随）。
   useEffect(() => {
