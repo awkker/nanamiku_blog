@@ -19,7 +19,7 @@ site:
   avatar: /img/author.jpg # 网站头像
   showLogo: true # 是否显示 Logo
   author: 薰逸酱 # 作者名称 - 请修改为你的名字
-  url: https://koharu.cosine.ren # 站点 URL 用于 RSS 和 SEO
+  url: https://nanamiku-blog.pages.dev # 站点 URL 用于 RSS 和 SEO
   defaultOgImage: /img/author.jpg # 默认 Open Graph 图片
   startYear: 2026 # 建站年份
   timezone: Asia/Shanghai # 时区配置 (IANA 格式)，用于日期显示和处理

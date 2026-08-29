@@ -18,7 +18,7 @@ export const copy = {
     text: '薰逸の猫窝',
   },
   seo: {
-    siteUrl: 'https://koharu.cosine.ren',
+    siteUrl: 'https://nanamiku-blog.pages.dev',
     siteTitle: '薰逸の猫窝',
   },
   home: {
