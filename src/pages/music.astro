@@ -1,0 +1,20 @@
+---
+import { bgmConfig } from '@constants/site-config';
+/**
+ * 歌单页（/music）。
+ *
+ * 数据源与全站统一：直接读取 config/site.yaml 的 bgm.audio
+ * （开屏顶栏 / 博客顶栏 / 全局 BGM / 本页面共用同一份歌单），
+ * 修改歌单只需改 site.yaml 一处。
+ * 播放器 UI 复用主题内嵌 Meting 播放器（ContentEnhancer 自动挂载）。
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+
+// 转换为播放器标签所需的 { title, list } 结构
+const audioGroups = bgmConfig.audio.map((group) => ({ title: group.title, list: group.list }));
+const dataSrc = JSON.stringify(audioGroups);
+---
+
+<PageLayout frontmatter={{ title: '歌单', description: '我喜欢的音乐' }}>
+  <div data-audio-player data-src={dataSrc} data-api={bgmConfig.metingApi ?? ''} />
+</PageLayout>
