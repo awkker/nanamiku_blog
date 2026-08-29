@@ -70,10 +70,12 @@ categoryMap:
   周刊: weekly
   # Secondary categories (for nested paths)
   前端: front-end
+  后端: back-end
+  算法: algorithm
+  AI: ai
+  Linux: linux
   # Add more as needed:
   # 书摘: reading
-  # 后端: back-end
-  # 算法: algorithm
   # 项目: project
 
 # =============================================================================
