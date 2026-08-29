@@ -15,7 +15,7 @@ site:
   alternate: KaoruNeko # 网站英文名称 用于页脚、Logo、@ handle 等
   subtitle: 埋骨何须桑梓地，人生无处不青山。 # 网站副标题
   name: 薰逸酱 # 作者名称 - 请修改为你的名字
-  description: 一个基于 Astro 的现代化博客主题 # 网站描述
+  description: 薰逸の猫窝——基于 astro-koharu 主题打造的个人博客。 # 网站描述
   avatar: /img/author.jpg # 网站头像
   showLogo: true # 是否显示 Logo
   author: 薰逸酱 # 作者名称 - 请修改为你的名字
