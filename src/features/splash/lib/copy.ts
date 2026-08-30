@@ -18,7 +18,7 @@ export const copy = {
     text: '薰逸の猫窝',
   },
   seo: {
-    siteUrl: 'https://nanamiku-blog.pages.dev',
+    siteUrl: 'https://xunyi.cloud',
     siteTitle: '薰逸の猫窝',
   },
   home: {
