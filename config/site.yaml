@@ -233,6 +233,12 @@ friends:
       desc: FE / ACG / 手工 / 深色模式强迫症 / INFP / 兴趣广泛养两只猫的老宅女 / remote
       image: https://blog.cosine.ren/img/avatar.webp
       color: '#ed788b'
+    - site: 芙芙の小窝
+      url: https://titroupast.github.io/blog/posts/
+      owner: 芙宁娜
+      desc: 记录与分享。
+      image: /img/friends/fufu.webp
+      color: '#7ec7ff'
   
 # =============================================================================
 # Announcements
