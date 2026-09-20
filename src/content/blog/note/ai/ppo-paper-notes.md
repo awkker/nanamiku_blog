@@ -1,7 +1,7 @@
 ---
 title: "PPO 论文学习记录：从 Policy Gradient、TRPO 到 Clipping"
 link: note/ai/ppo-paper-notes
-date: 2026-08-30
+date: 2026-09-20
 categories: ['笔记', 'AI']
 math: true
 description: "逐节拆解 PPO 论文：从 Policy Gradient 到 TRPO 的信赖域，再到 PPO 的 clipped surrogate objective，讲清 ratio、clip 与 min 到底在解决什么问题。"
